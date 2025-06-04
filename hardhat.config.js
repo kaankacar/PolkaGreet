@@ -37,8 +37,21 @@ module.exports = {
         },
         passetHub: {
             polkavm: true,
+            chainId: 420420421,
             url: 'https://testnet-passet-hub-eth-rpc.polkadot.io',
-            accounts: [PRIVATE_KEY],
+            accounts: [PRIVATE_KEY]
         },
+    },
+    etherscan: {
+        customChains: [
+            {
+                network: "passetHub",
+                chainId: 420420421,
+                urls: {
+                    apiURL: "https://blockscout-passet-hub.parity-testnet.parity.io/api",
+                    browserURL: "https://blockscout-passet-hub.parity-testnet.parity.io"
+                }
+            }
+        ]
     }
 };
