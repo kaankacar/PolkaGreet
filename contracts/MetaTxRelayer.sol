@@ -5,8 +5,8 @@ import "./IERC2771Context.sol";
 
 /**
  * @title MetaTxRelayer
- * @dev A forwarder contract that validates EIP-712 signatures and executes meta-transactions
- * with user approval system and fee management
+ * @dev A minimal forwarder contract that validates EIP-712 signatures and executes meta-transactions
+ * This contract allows users to sign messages off-chain that can be submitted by relayers
  */
 contract MetaTxRelayer {
     using ECDSA for bytes32;
@@ -25,8 +25,6 @@ contract MetaTxRelayer {
     );
 
     mapping(address => uint256) private _nonces;
-    mapping(address => bool) private _approvals;
-    mapping(address => uint256) private _deposits;
 
     event MetaTransactionExecuted(
         address indexed from,
@@ -35,8 +33,6 @@ contract MetaTxRelayer {
         bool success,
         bytes returndata
     );
-    event RelayerApproved(address indexed user);
-    event DepositReceived(address indexed user, uint256 amount);
 
     /**
      * @dev Returns the current nonce for a given address
@@ -46,53 +42,21 @@ contract MetaTxRelayer {
     }
 
     /**
-     * @dev Checks if a user has approved the relayer
-     */
-    function isApproved(address user) public view returns (bool) {
-        return _approvals[user];
-    }
-
-    /**
-     * @dev Approves the relayer for meta-transactions
-     */
-    function approve() public {
-        require(!_approvals[msg.sender], "MetaTxRelayer: already approved");
-        _approvals[msg.sender] = true;
-        emit RelayerApproved(msg.sender);
-    }
-
-    /**
-     * @dev Deposit funds to cover future transaction fees
-     */
-    receive() external payable {
-        _deposits[msg.sender] += msg.value;
-        emit DepositReceived(msg.sender, msg.value);
-    }
-
-    /**
-     * @dev Returns the deposited balance of a user
-     */
-    function getDeposit(address user) public view returns (uint256) {
-        return _deposits[user];
-    }
-
-    /**
      * @dev Verifies the signature and executes the meta-transaction
      */
     function execute(ForwardRequest calldata req, bytes calldata signature)
         public
+        payable
         returns (bool success, bytes memory returndata)
     {
-        require(_approvals[req.from], "MetaTxRelayer: sender not approved");
+        // Verify nonce
         require(_nonces[req.from] == req.nonce, "MetaTxRelayer: invalid nonce");
+        
+        // Verify signature
         require(_verify(req, signature), "MetaTxRelayer: signature verification failed");
-        require(_deposits[req.from] >= req.value, "MetaTxRelayer: insufficient deposit");
 
         // Increment nonce
         _nonces[req.from] = req.nonce + 1;
-
-        // Deduct from user's deposit
-        _deposits[req.from] -= req.value;
 
         // Execute the call
         (success, returndata) = req.to.call{gas: req.gas, value: req.value}(
@@ -101,6 +65,11 @@ contract MetaTxRelayer {
 
         // Emit event
         emit MetaTransactionExecuted(req.from, req.to, req.data, success, returndata);
+
+        // Refund unused gas (optional optimization)
+        if (gasleft() > 0) {
+            payable(msg.sender).transfer(address(this).balance);
+        }
     }
 
     /**
