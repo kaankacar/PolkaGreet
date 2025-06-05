@@ -12,7 +12,7 @@ PolkaGreet is a demonstration project that showcases the power of meta-transacti
 
 ### 🚀 Live Demo
 
-- **Frontend**: Running on `https://polka-greet.vercel.app/`
+- **Frontend**: Running on `https://polka-greet-mlkw.vercel.app/`
 - **Network**: Polkadot
 - **Contracts**: Deployed and verified on-chain
 
