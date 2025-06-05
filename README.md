@@ -2,7 +2,7 @@
 
 **A meta-transaction demonstration showcasing gasless interactions on Polkadot's Paseo Asset Hub**
 
-Built with ❤️ by **Kaan Kacar** at **EthBelgrade 2024**
+Built with ❤️ by **Kaan Kacar** at **EthBelgrade 2025**
  
 ---
 
@@ -12,8 +12,8 @@ PolkaGreet is a demonstration project that showcases the power of meta-transacti
 
 ### 🚀 Live Demo
 
-- **Frontend**: Running on `http://localhost:3004/`
-- **Network**: Paseo Asset Hub (Testnet)
+- **Frontend**: Running on `https://polka-greet.vercel.app/`
+- **Network**: Polkadot
 - **Contracts**: Deployed and verified on-chain
 
 ## ✨ Key Features
