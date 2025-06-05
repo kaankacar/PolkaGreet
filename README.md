@@ -139,25 +139,31 @@ The application will be available at `http://localhost:3000` (or another port if
 ### Project Structure
 
 ```
-storage-hardhat1/
-├── contracts/              # Smart contracts
-│   ├── PolkaGreetContract.sol
-│   ├── MetaTxRelayer.sol
-│   └── IERC2771Context.sol
-├── scripts/                # Deployment and utility scripts
-│   ├── deploy-polkagreet.js
-│   └── polkagreet-relayer.js
-├── test/                   # Contract tests
-│   └── PolkaGreet.test.js
-├── frontend/               # React application
+storage-hardhat1/                 # 🌸 PolkaGreet - Main Repository
+├── contracts/                   # Smart contracts
+│   ├── PolkaGreetContract.sol   # Main greeting contract
+│   ├── MetaTxRelayer.sol        # Meta-transaction relayer
+│   └── IERC2771Context.sol      # ERC2771 interface
+├── scripts/                     # Deployment and utility scripts
+│   ├── deploy-polkagreet.js     # PolkaGreet deployment script
+│   └── polkagreet-relayer.js    # Relayer service
+├── test/                        # Contract tests
+│   └── PolkaGreet.test.js       # Comprehensive test suite
+├── frontend/                    # React TypeScript application
 │   ├── src/
-│   │   ├── PolkaGreetApp.tsx
-│   │   ├── PolkaGreetApp.css
-│   │   └── App.tsx
-│   └── public/
-├── contract-addresses.json # Deployed contract addresses
-├── hardhat.config.js      # Hardhat configuration
-└── package.json
+│   │   ├── PolkaGreetApp.tsx    # Main app component
+│   │   ├── PolkaGreetApp.css    # Polkadot-themed styling
+│   │   └── App.tsx              # App entry point
+│   ├── public/
+│   │   ├── index.html           # HTML template
+│   │   └── manifest.json        # PWA manifest
+│   └── package.json             # Frontend dependencies
+├── polkadot-sdk/                # Polkadot SDK (for PolkaVM compilation)
+├── bin/                         # Binary files for development
+├── contract-addresses.json      # Deployed contract addresses
+├── hardhat.config.js           # Hardhat configuration
+├── package.json                 # Root dependencies
+└── README.md                    # This file
 ```
 
 ### Smart Contract Development
