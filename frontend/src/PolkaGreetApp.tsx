@@ -17,12 +17,14 @@ const PolkaGreetContractABI = [
 
 // Contract addresses - update these after deployment
 const CONTRACTS = {
-  metaTxRelayer: "0x6fb6E63C01B68e9EDB719e26048aaA62A372Fb95", // Updated with actual address
-  polkaGreetContract: "0xD892416A56F0B01a1442De6F78EafEFaDb2D8211" // Updated with actual address
+  metaTxRelayer: "0x6fb6E63C01B68e9EDB719e26048aaA62A372Fb95",
+  polkaGreetContract: "0xD892416A56F0B01a1442De6F78EafEFaDb2D8211"
 };
 
-// Relayer wallet address (derived from the private key)
-const RELAYER_ADDRESS = "0xfca1A55A31dd5408fA136D30031b94E63Efc325c"; // Updated with actual relayer address
+// OpenZeppelin Relayer connection — see relayer/README.md
+const RELAYER_URL = process.env.REACT_APP_RELAYER_URL || "http://localhost:8080";
+const RELAYER_ID = process.env.REACT_APP_RELAYER_ID || "polkagreet";
+const RELAYER_API_KEY = process.env.REACT_APP_RELAYER_API_KEY || "";
 
 interface GreetingInfo {
   greeting: string;
@@ -212,29 +214,57 @@ function PolkaGreetApp() {
       // Sign the request
       const signature = await signer.signTypedData(domain, types, forwardRequest);
       console.log('✅ Signature created:', signature);
-      
-      // Simulate relayer execution (in a real app, this would be sent to the relayer service)
-      // For demo, we'll call the relayer directly
-      const relayerSigner = new ethers.Wallet(
-        "56f260421bc7a40adf268d89e27fe35963ea3b84069cb4d2932ad32fd6bb33be",
-        provider
+
+      if (!RELAYER_API_KEY) {
+        throw new Error(
+          'REACT_APP_RELAYER_API_KEY is not set. Start the OpenZeppelin Relayer (see relayer/README.md) and set the key in frontend/.env.local.'
+        );
+      }
+
+      const executeData = metaTxContract.interface.encodeFunctionData(
+        'execute',
+        [forwardRequest, signature]
       );
-      
-      const relayerMetaTxContract = new Contract(CONTRACTS.metaTxRelayer, MetaTxRelayerABI, relayerSigner);
-      
-      // Execute the meta-transaction
-      const tx = await relayerMetaTxContract.execute(forwardRequest, signature);
-      setTxHash(tx.hash);
-      
-      console.log('⏳ Meta-transaction sent:', tx.hash);
-      
-      // Wait for confirmation
-      await tx.wait();
-      console.log('✅ Meta-transaction confirmed!');
-      
-      // Refresh greeting info
-      await loadGreetingInfo();
-      
+
+      const response = await fetch(
+        `${RELAYER_URL}/api/v1/relayers/${RELAYER_ID}/transactions`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${RELAYER_API_KEY}`,
+          },
+          body: JSON.stringify({
+            to: CONTRACTS.metaTxRelayer,
+            value: 0,
+            data: executeData,
+            gas_limit: 300000,
+            speed: 'fast',
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Relayer rejected request (${response.status}): ${body}`);
+      }
+
+      const result = await response.json();
+      const submittedHash =
+        result?.data?.hash ||
+        result?.data?.transaction_hash ||
+        result?.hash ||
+        result?.transaction_hash ||
+        '';
+      setTxHash(submittedHash);
+      console.log('⏳ Meta-transaction submitted via OZ Relayer:', result);
+
+      // OZ Relayer is async — poll greeting state for ~30s waiting for inclusion.
+      for (let i = 0; i < 15; i++) {
+        await new Promise((r) => setTimeout(r, 2000));
+        await loadGreetingInfo();
+      }
+
       setTimeout(() => setIsPartyMode(false), 3000);
       
     } catch (error) {

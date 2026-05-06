@@ -28,6 +28,14 @@ frontend/build/
 frontend/dist/
 frontend/.next/
 frontend/.env
+frontend/.env.local
+frontend/tsconfig.tsbuildinfo
+
+# OpenZeppelin Relayer (relayer/)
+relayer/.env
+relayer/openzeppelin-relayer/
+relayer/config/keys/*.json
+!relayer/config/keys/.gitkeep
 
 # Logs
 *.log

@@ -1,0 +1,16 @@
+{
+  "networks": [
+    {
+      "type": "evm",
+      "network": "paseo-asset-hub",
+      "chain_id": 420420421,
+      "required_confirmations": 1,
+      "symbol": "PAS",
+      "rpc_urls": ["https://testnet-passet-hub-eth-rpc.polkadot.io"],
+      "explorer_urls": ["https://blockscout-passet-hub.parity-testnet.parity.io/"],
+      "average_blocktime_ms": 6000,
+      "is_testnet": true,
+      "tags": ["testnet", "polkadot", "polkavm"]
+    }
+  ]
+}

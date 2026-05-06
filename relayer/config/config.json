@@ -1,0 +1,31 @@
+{
+  "relayers": [
+    {
+      "id": "polkagreet",
+      "name": "PolkaGreet Relayer",
+      "network": "paseo-asset-hub",
+      "network_type": "evm",
+      "signer_id": "local-signer",
+      "paused": false,
+      "policies": {
+        "whitelist_receivers": ["0x6fb6E63C01B68e9EDB719e26048aaA62A372Fb95"],
+        "min_balance": 0
+      }
+    }
+  ],
+  "signers": [
+    {
+      "id": "local-signer",
+      "type": "local",
+      "config": {
+        "path": "config/keys/local-signer.json",
+        "passphrase": {
+          "type": "env",
+          "value": "KEYSTORE_PASSPHRASE"
+        }
+      }
+    }
+  ],
+  "networks": "./config/networks",
+  "plugins": []
+}

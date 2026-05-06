@@ -1,0 +1,4 @@
+.env
+openzeppelin-relayer/
+config/keys/*.json
+node_modules/

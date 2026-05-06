@@ -1,0 +1,12 @@
+{
+  "name": "polkagreet-relayer-tooling",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Setup helpers for the PolkaGreet OpenZeppelin Relayer (keystore generator, etc.)",
+  "scripts": {
+    "generate-keystore": "node scripts/generate-keystore.js"
+  },
+  "dependencies": {
+    "ethers": "^6.14.3"
+  }
+}

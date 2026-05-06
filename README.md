@@ -42,7 +42,7 @@ PolkaGreet is a demonstration project that showcases the power of meta-transacti
 ### Infrastructure Components
 
 - **Frontend**: React TypeScript application with modern Polkadot theming
-- **Relayer Service**: Node.js service that monitors and executes meta-transactions
+- **Relayer Service**: Self-hosted [OpenZeppelin Relayer](https://docs.openzeppelin.com/relayer) (Rust + Redis, run via Docker Compose) that holds a funded wallet, enforces a `whitelist_receivers` policy, and submits `MetaTxRelayer.execute(req, sig)` on behalf of users — see [`relayer/README.md`](./relayer/README.md)
 - **Smart Contracts**: Solidity contracts compiled for PolkaVM
 
 ## 🔧 Technical Implementation
@@ -101,26 +101,33 @@ npm install
 
 The project is pre-configured for Paseo Asset Hub with deployed contracts. No additional environment setup is required for testing.
 
-### 4. Start the Relayer Service
+### 4. Start the OpenZeppelin Relayer
+
+The relayer is a self-hosted OpenZeppelin Relayer instance (Rust service + Redis) running in Docker. It holds the funded wallet and exposes a REST API at `http://localhost:8080`.
 
 ```bash
-node scripts/polkagreet-relayer.js 0x6fb6E63C01B68e9EDB719e26048aaA62A372Fb95 0xD892416A56F0B01a1442De6F78EafEFaDb2D8211
+cd relayer
+cp .env.example .env
+$EDITOR .env       # set API_KEY, WEBHOOK_SIGNING_KEY, KEYSTORE_PASSPHRASE, RELAYER_PRIVATE_KEY
+./scripts/setup.sh # clones OpenZeppelin/openzeppelin-relayer and builds the v3 keystore
+docker compose up -d
 ```
 
-Expected output:
+Verify it's up:
+
+```bash
+source .env
+curl -H "Authorization: Bearer $API_KEY" http://localhost:8080/api/v1/relayers
 ```
-🚀 Initializing PolkaGreet Relayer...
-📍 Relayer Address: 0xfca1A55A31dd5408fA136D30031b94E63Efc325c
-✅ Relayer initialized successfully!
-👂 Relayer is now listening for greeting requests...
-💰 Relayer Balance: 47.97118324415 WND
-🌸 PolkaGreet Relayer is ready to process meta-transactions!
-```
+
+See [`relayer/README.md`](./relayer/README.md) for full details on policies, security model, and how to send a meta-transaction by hand.
 
 ### 5. Start the Frontend
 
 ```bash
 cd frontend
+cp .env.example .env.local
+# put the same API_KEY value from relayer/.env into REACT_APP_RELAYER_API_KEY
 npm start
 ```
 
@@ -139,29 +146,31 @@ The application will be available at `http://localhost:3000` (or another port if
 ### Project Structure
 
 ```
-storage-hardhat1/                 # 🌸 PolkaGreet - Main Repository
+PolkaGreet/                      # 🌸 PolkaGreet - Main Repository
 ├── contracts/                   # Smart contracts
 │   ├── PolkaGreetContract.sol   # Main greeting contract
-│   ├── MetaTxRelayer.sol        # Meta-transaction relayer
+│   ├── MetaTxRelayer.sol        # ERC-2771 trusted forwarder
 │   └── IERC2771Context.sol      # ERC2771 interface
-├── scripts/                     # Deployment and utility scripts
-│   ├── deploy-polkagreet.js     # PolkaGreet deployment script
-│   └── polkagreet-relayer.js    # Relayer service
+├── scripts/                     # Deployment scripts
+│   └── deploy-polkagreet.js     # PolkaGreet deployment script
+├── relayer/                     # Self-hosted OpenZeppelin Relayer (see ./relayer/README.md)
+│   ├── docker-compose.yaml      # Relayer + Redis services
+│   ├── config/
+│   │   ├── config.json          # Relayer + signer + policy
+│   │   ├── networks/paseo.json  # Paseo Asset Hub network definition
+│   │   └── keys/                # v3 keystore (generated, gitignored)
+│   └── scripts/
+│       ├── setup.sh             # Clone OZ Relayer + provision keystore
+│       └── generate-keystore.js # Encrypts RELAYER_PRIVATE_KEY into a v3 keystore
 ├── test/                        # Contract tests
 │   └── PolkaGreet.test.js       # Comprehensive test suite
 ├── frontend/                    # React TypeScript application
-│   ├── src/
-│   │   ├── PolkaGreetApp.tsx    # Main app component
-│   │   ├── PolkaGreetApp.css    # Polkadot-themed styling
-│   │   └── App.tsx              # App entry point
-│   ├── public/
-│   │   ├── index.html           # HTML template
-│   │   └── manifest.json        # PWA manifest
-│   └── package.json             # Frontend dependencies
+│   ├── src/PolkaGreetApp.tsx    # Main app component (calls OZ Relayer API)
+│   └── .env.example             # REACT_APP_RELAYER_* config
 ├── polkadot-sdk/                # Polkadot SDK (for PolkaVM compilation)
 ├── bin/                         # Binary files for development
 ├── contract-addresses.json      # Deployed contract addresses
-├── hardhat.config.js           # Hardhat configuration
+├── hardhat.config.js            # Hardhat configuration
 ├── package.json                 # Root dependencies
 └── README.md                    # This file
 ```
